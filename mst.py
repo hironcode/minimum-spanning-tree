@@ -11,18 +11,18 @@ def loadfile(filename):
     graph = defaultdict(list)
     with open(filename, 'r') as f:
         lines = f.readlines()
-        for line in lines:
-            # skip an empty line
-            if line == '\n':
-                continue
-            # the text has the following format:
-            # [one node] [another node] [edge cost], representing
-            # [one airport] [another airport] [price]
-            node1 = int(line.split()[0])
-            node2 = int(line.split()[1])
-            edge_cost = int(line.split()[2])
-            # for every node1, place node2 and edge cost in its value
-            graph[node1].append((node2, edge_cost))
+    for line in lines:
+        # skip an empty line
+        if line == '\n':
+            continue
+        # the text has the following format:
+        # [one node] [another node] [edge cost], representing
+        # [one airport] [another airport] [price]
+        node1 = int(line.split()[0])
+        node2 = int(line.split()[1])
+        edge_cost = int(line.split()[2])
+        # for every node1, place node2 and edge cost in its value
+        graph[node1].append((node2, edge_cost))
     return graph
 
 
@@ -55,6 +55,11 @@ def prim(graph:dict):
     visited.add(start)  # add the source node into the visited set
     tree = []   # path
     total = 0   # total cost
+
+    times = {
+        ""
+    }
+
     # get edges (the other node and edge cost) incident to the source node and push them into a heap
     for n2, c in graph[start]:
         heappush(unvisited, (c, start, n2))
@@ -62,18 +67,20 @@ def prim(graph:dict):
         cost, node1, node2 = heappop(unvisited)     # pick up the cheapest edge incident to a visited node
         tree.append((node1, node2, cost))   # append the edge into the path
         total += cost   # increment the total cost
-        # add node1 and node2 to the set | To affirm that both the nodes are marked by adding both indicriminately
+        # add node2 to the visited set
         visited.add(node1)
         visited.add(node2)
         # update the heap | add edges going out from node2.
         # in the first loop, node1=source vertex is already visited and node2 is added to the visited
         # so, add the edges from node2 into a list of candidate edges for the next loop
         for n3, c in graph[node2]:
-            heappush(unvisited, (c, node2, n3))
+            unvisited.append((c, node2, n3))
         # check through each unvisited edge and delete those whose two nodes are in the visited
+        # FUTURE UPDATE: use union-find to check the two vertices are in the visited
         for edge in unvisited:
             if edge[1] in visited and edge[2] in visited:
                 unvisited.remove(edge)
+        heapify(unvisited)
     end_time = time.perf_counter()  # finish timing
     return end_time-start_time, total
 
@@ -135,10 +142,6 @@ def main():
         ptime, _ = prim(graph)
         prim_times.append(ptime)
 
-    """Observation"""
-    # runtime of kruskal's algorithm is O(n)
-    # For each of the n loops, it seems to do constant works (heappop + unionfind)
-    # runtime of prim's algorithm is O(n + log m). For each of the n loops, it seems to do log m works (heappush)
     print(kruskal_times)
     print(prim_times)
     # show graph
